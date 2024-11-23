@@ -1,0 +1,48 @@
+name: Sync MaaAssistantArknights
+
+on:
+  push:
+  schedule:
+    - cron: '0 */12 * * *'  # 每 12 小时运行一次
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check for repository B-1 status
+        env:
+          TOKEN: ${{ secrets.MAA_SYNC_TOKEN }}
+        run: |
+          # 获取仓库 B-1 的当前状态
+          git clone https://github.com/Manicsteiner/MaaAssistantArknights.git
+          cd MaaAssistantArknights
+          git fetch origin
+          git checkout dev
+
+          # 获取 B-1 和 B-0 的主分支
+          B1_MAIN_SHA=$(git rev-parse origin/dev)
+          B0_MAIN_SHA=$(git ls-remote https://github.com/MaaAssistantArknights/MaaAssistantArknights.git refs/heads/dev | cut -f1)
+
+          # 比较 B-1 和 B-0 的主分支是否一致
+          if [ "$B1_MAIN_SHA" != "$B0_MAIN_SHA" ]; then
+            echo "Syncing B-1 with B-0..."
+            
+            # 如果不同，进行同步操作
+            git remote add upstream https://github.com/MaaAssistantArknights/MaaAssistantArknights.git
+            git fetch upstream
+            git merge upstream/dev
+            
+            # 如果有冲突，需要处理
+            git remote set-url origin https://$TOKEN@github.com/Manicsteiner/MaaAssistantArknights.git
+            git push origin dev
+          else
+            echo "No changes detected, skipping sync."
+          fi
