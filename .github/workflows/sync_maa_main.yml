@@ -3,7 +3,7 @@ name: Sync MaaAssistantArknights
 on:
   push:
   schedule:
-    - cron: '0 */12 * * *'  # 每 12 小时运行一次
+    - cron: '0 10,22 * * *'  # 每 12 小时运行一次，UTC10:00/22:00
 
 jobs:
   sync:
