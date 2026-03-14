@@ -3,7 +3,7 @@ name: Sync MaaAssistantArknights
 on:
   push:
   schedule:
-    - cron: '0 9,21 * * *'  # 每 12 小时运行一次，UTC 9:00/21:00
+    - cron: '0 9,22 * * *'  # 每 12 小时运行一次，UTC+8 17:00/6:00
 
 jobs:
   sync:
@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Check for repository B-1 status
+      - name: Check for repository status
         env:
           TOKEN: ${{ secrets.MAA_SYNC_TOKEN }}
         run: |
@@ -25,11 +25,11 @@ jobs:
           git clone https://github.com/Manicsteiner/MaaAssistantArknights.git
           cd MaaAssistantArknights
           git fetch origin
-          git checkout dev
+          git checkout dev-v2
 
           # 获取 B-1 和 B-0 的主分支
-          B1_MAIN_SHA=$(git rev-parse origin/dev)
-          B0_MAIN_SHA=$(git ls-remote https://github.com/MaaAssistantArknights/MaaAssistantArknights.git refs/heads/dev | cut -f1)
+          B1_MAIN_SHA=$(git rev-parse origin/dev-v2)
+          B0_MAIN_SHA=$(git ls-remote https://github.com/MaaAssistantArknights/MaaAssistantArknights.git refs/heads/dev-v2 | cut -f1)
 
           # 比较 B-1 和 B-0 的主分支是否一致
           if [ "$B1_MAIN_SHA" != "$B0_MAIN_SHA" ]; then
@@ -38,11 +38,11 @@ jobs:
             # 如果不同，进行同步操作
             git remote add upstream https://github.com/MaaAssistantArknights/MaaAssistantArknights.git
             git fetch upstream
-            git merge upstream/dev
+            git merge upstream/dev-v2
             
             # 如果有冲突，需要处理
             git remote set-url origin https://$TOKEN@github.com/Manicsteiner/MaaAssistantArknights.git
-            git push origin dev
+            git push origin dev-v2
           else
             echo "No changes detected, skipping sync."
           fi
